@@ -1,6 +1,5 @@
 # Pull base image.
-#FROM resin/rpi-raspbian:wheezy
-FROM itwars/rpi-elacticsearch151
+FROM resin/rpi-raspbian
 MAINTAINER Vincent RABAH <vincent.rabah@gmail.com>
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -8,9 +7,9 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN \
   	apt-get update && \
   	apt-get -y dist-upgrade && \
-  	apt-get install -y wget && \
+  	apt-get install -y wget curl && \
 	mkdir -p /kibana && \
-	wget --no-check-certificate -O - https://download.elasticsearch.org/kibana/kibana/kibana-4.0.2-linux-x64.tar.gz \
+	wget --no-check-certificate -O - https://download.elasticsearch.org/kibana/kibana/kibana-4.1.1-linux-x64.tar.gz \
 	| tar xzf - --strip-components=1 -C "/kibana" && \
 	wget http://node-arm.herokuapp.com/node_latest_armhf.deb && \
 	dpkg -i node_latest_armhf.deb && \
@@ -23,10 +22,15 @@ RUN \
 	apt-get autoclean -y && \
 	apt-get autoremove -y && \
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
-#	sed -i.bak s/0.0.0.0/1.1.1.1/g /kibana/config/kibana.yml
 
-WORKDIR /kibana
+ADD config/kibana.yml /kibana/config/kibana.yml
+ADD config/run.sh /run.sh
 
-CMD ["/kibana/bin/kibana"]
+RUN chmod +x /run.sh
 
 EXPOSE 5601
+
+#CMD ["/kibana/bin/kibana","-c", "/kibana/config/kibana.yml"]
+
+ENTRYPOINT /run.sh
+
